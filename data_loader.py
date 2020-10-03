@@ -116,15 +116,13 @@ class DataLoader():
         candles_dir_path = os.path.join(os.getcwd(), f"candles_{market_kind}")
         self.create_dir(candles_dir_path)
         
-        candles = []
         now = datetime.now().strftime("%Y%m%d")
         for code, name, _, listing_date in tqdm(self.get_market_info(market_kind)):
             self.write_candle(candles_dir_path, code, str(listing_date), now)
             time.sleep(0.5)
-        return candles
 
 
 data_loader = DataLoader()
-print(len(data_loader.write_entire_period_candles("kospi")))
+data_loader.write_entire_period_candles("kospi")
 
 
