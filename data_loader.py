@@ -67,8 +67,7 @@ class DataLoader():
                 market.append([code, name, second_code, listing_date])
         print(f"num of {market_kind} code: {len(market)}")
         return market
-    
-    def get_candle(self, code, start_date, end_date, chart_type="D"):
+    def set_inst_candle(self, code, start_date, end_date, chart_type="D"):
         self.inst_candle.SetInputValue(0, code) # 요청 종목 코드
         self.inst_candle.SetInputValue(1, ord('1')) # 1 - 기간으로 요청, 2 - 갯수로 요청
         self.inst_candle.SetInputValue(2, end_date) # 요청종료일, YYYYMMDD
@@ -77,6 +76,9 @@ class DataLoader():
         self.inst_candle.SetInputValue(6, ord(chart_type)) # ‘D’: 일, ‘W’: 주, ‘M’: 월, ‘m’: 분, ‘T’: 틱
         self.inst_candle.SetInputValue(9, ord('1')) # 0 - 무수정주가, 1 - 수정주가
         self.inst_candle.BLockRequest()
+
+    def get_candle(self, code, start_date, end_date, chart_type="D"):
+        self.set_inst_candle(code, start_date, end_date, chart_type)
         len_data = self.inst_candle.GetHeaderValue(3)
         len_field = self.inst_candle.GetHeaderValue(1)
         
@@ -89,25 +91,17 @@ class DataLoader():
         
         return candle
     
+    def create_dir(self, path):
+        if not os.path.isdir(path):
+            print(f"CREATE DIR: {path}")
+            os.mkdir(path)
 
-    def write_candle(self, code, start_date, end_date, chart_type="D"):
-        self.inst_candle.SetInputValue(0, code) # 요청 종목 코드
-        self.inst_candle.SetInputValue(1, ord('1')) # 1 - 기간으로 요청, 2 - 갯수로 요청
-        self.inst_candle.SetInputValue(2, end_date) # 요청종료일, YYYYMMDD
-        self.inst_candle.SetInputValue(3, start_date) # 요청시작일, YYYYMMDD
-        self.inst_candle.SetInputValue(5, (0,2,3,4,5,6,8,9,10)) # 0: 날짜, 1: 시간, 2: 시가, 3: 고가, 4: 저가, 5: 종가, 6: 전일대비, 8: 거래량, 9: 거래대금, 10: 누적체결매도수량
-        self.inst_candle.SetInputValue(6, ord(chart_type)) # ‘D’: 일, ‘W’: 주, ‘M’: 월, ‘m’: 분, ‘T’: 틱
-        self.inst_candle.SetInputValue(9, ord('1')) # 0 - 무수정주가, 1 - 수정주가
-        self.inst_candle.BLockRequest()
+    def write_candle(self, candles_dir_path, code, start_date, end_date, chart_type="D"):
+        self.set_inst_candle(code, start_date, end_date, chart_type)
         len_data = self.inst_candle.GetHeaderValue(3)
         len_field = self.inst_candle.GetHeaderValue(1)
         
-        
-        candles_dir = os.path.join(os.getcwd(), "candles")
-        if os.path.isdir(candles_dir):
-            os.mkdir(candles_dir)
-        
-        with open(os.path.join(candles_dir, f"{code}.csv"), "w") as f:
+        with open(os.path.join(candles_dir_path, f"{code}.csv"), "w", newline='') as f:
             candle = [None] * len_data
             writer = csv.writer(f)
             for i in range(len_data):
@@ -117,16 +111,20 @@ class DataLoader():
                 writer.writerow(row)
             
     
-    def get_candles(self):
+    def write_entire_period_candles(self, market_kind):
+        from datetime import datetime
+        candles_dir_path = os.path.join(os.getcwd(), f"candles_{market_kind}")
+        self.create_dir(candles_dir_path)
+        
         candles = []
-        for code, name, _, listing_date in tqdm(self.get_market_info("kospi")[:1]):
-            # candles.append(self.get_candle(code, str(listing_date), "20200910"))
-            candles.append(self.write_candle(code, str(listing_date), "20200910"))
+        now = datetime.now().strftime("%Y%m%d")
+        for code, name, _, listing_date in tqdm(self.get_market_info(market_kind)):
+            self.write_candle(candles_dir_path, code, str(listing_date), now)
             time.sleep(0.5)
         return candles
 
 
 data_loader = DataLoader()
-print(len(data_loader.get_candles()))
+print(len(data_loader.write_entire_period_candles("kospi")))
 
 
