@@ -196,5 +196,4 @@ class DataLoader():
       candles.append(self.get_candle_from_csv(path))
     candles = pd.concat(candles)
     # candles = pd.DataFrame(np.concatenate(candles))
-
-    pass
+    return candles
