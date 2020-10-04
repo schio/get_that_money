@@ -1,0 +1,19 @@
+{
+    "data":{
+        "market_kind": "kospi",
+        "market_section_kinds": [1],
+        "candle_start_date": null,
+        "candle_end_date": null,
+        "force_write_csv": false,
+        "_indicator": {
+            "macd": true,
+            "willr": true,
+            "cci": true,
+            "ma": true,
+            "slow_stoch_k": true,
+            "bollinger_bands": true,
+            "roc": true
+        },
+        "change_ratio": true
+    }
+}
